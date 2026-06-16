@@ -1,0 +1,17 @@
+- generic [ref=e2]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - heading "Tendoo AI" [level=1] [ref=e6]
+      - paragraph [ref=e7]: Đăng nhập vào Admin Portal
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - text: Email
+        - textbox "Email" [ref=e10]:
+          - /placeholder: admin@example.com
+      - generic [ref=e11]:
+        - text: Mật khẩu
+        - textbox "Mật khẩu" [ref=e12]:
+          - /placeholder: ••••••••
+      - button "Đăng nhập" [ref=e13] [cursor=pointer]
+  - region "Notifications (F8)":
+    - list

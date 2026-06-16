@@ -25,7 +25,7 @@ export function ParamTypeBadge({ value, className }: Readonly<ParamTypeBadgeProp
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
+        'inline-flex items-center rounded px-2 py-0.5 text-xs font-medium',
         typeStyles[type],
         className
       )}

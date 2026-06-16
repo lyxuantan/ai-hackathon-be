@@ -30,6 +30,7 @@ export function DeleteConfirmDialog({
 
   const handleConfirm = async () => {
     if (!param) return
+    console.log(param)
     try {
       await deleteMutation.mutateAsync(param.id)
       toast({ title: 'Thành công', description: 'Tham số đã được xoá' })

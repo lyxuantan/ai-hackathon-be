@@ -1,4 +1,11 @@
+---
+description: "/sonar-fix-fe — Fix SonarQube Issues cho React FE"
+allowed-tools: Agent, Bash, Read, Write, Edit, Glob, Grep
+---
+
 # /sonar-fix-fe — Fix SonarQube Issues cho React FE
+
+> **Agent Task** — Spawn `general-purpose` subagent để fetch FE issues + fix trong isolated context. Nội dung bên dưới là prompt truyền vào agent.
 
 Fetch issues từ SonarQube chỉ trong FE source, phân tích và fix theo TypeScript/React conventions.
 

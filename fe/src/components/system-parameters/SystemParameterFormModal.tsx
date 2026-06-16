@@ -45,7 +45,7 @@ export function SystemParameterFormModal({
   initialData,
   onClose,
   onSuccess,
-}: Readonly<SystemParameterFormModalProps>) {
+}: SystemParameterFormModalProps) {
   const {
     register,
     handleSubmit,
@@ -80,14 +80,14 @@ export function SystemParameterFormModal({
   const keyValue = watch('key')
 
   const handleKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValue('key', e.target.value.toUpperCase().replaceAll(/[^A-Z0-9_]/gu, ''), {
+    setValue('key', e.target.value.toUpperCase().replaceAll(/[^A-Z0-9_]/g, ''), {
       shouldValidate: true,
     })
   }
 
   const handleKeyPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault()
-    const pasted = e.clipboardData.getData('text').toUpperCase().replaceAll(/[^A-Z0-9_]/gu, '')
+    const pasted = e.clipboardData.getData('text').toUpperCase().replaceAll(/[^A-Z0-9_]/g, '')
     setValue('key', (keyValue + pasted).slice(0, 20), { shouldValidate: true })
   }
 

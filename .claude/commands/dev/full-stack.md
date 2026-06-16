@@ -1,4 +1,15 @@
+---
+description: "/full-stack — Full Stack Feature Implementation (BE + FE)"
+allowed-tools: Agent, Bash, Read, Write, Edit, Glob, Grep, TodoWrite
+---
+
 # /full-stack — Full Stack Feature Implementation
+
+> **Agent Task** — Spawn 2 subagents **tuần tự** (FE phụ thuộc BE API):
+> 1. **Agent 1 — BE**: DB migration → Entity → Service → Controller → build verify
+> 2. **Agent 2 — FE**: Types → API client → Hooks → Components → Page → build verify
+>
+> Nội dung bên dưới là prompt truyền lần lượt vào từng agent.
 
 Implement đầy đủ một feature: BE (Spring Boot) + FE (React), từ DB migration đến UI.
 

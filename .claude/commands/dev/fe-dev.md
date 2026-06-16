@@ -1,4 +1,11 @@
+---
+description: "/fe-dev — Implement FE Feature cho Tendoo AI (React + Figma)"
+allowed-tools: Agent, Bash, Read, Write, Edit, Glob, Grep, TodoWrite, mcp__figma__view_node
+---
+
 # /fe-dev — Implement FE Feature từ Figma + SPEC
+
+> **Agent Task** — Spawn `general-purpose` subagent để implement trong isolated context, giữ conversation chính sạch. Nội dung bên dưới là prompt truyền vào agent.
 
 Implement FE feature cho Tendoo AI admin portal dựa trên Figma design và SPEC.
 

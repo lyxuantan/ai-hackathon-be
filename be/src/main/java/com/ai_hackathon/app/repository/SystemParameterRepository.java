@@ -19,5 +19,5 @@ public interface SystemParameterRepository extends JpaRepository<SystemParameter
 
     @Query(value = "SELECT COUNT(*) > 0 FROM command_parameter_mappings WHERE parameter_id = :parameterId",
            nativeQuery = true)
-    boolean isInUse(@Param("parameterId") Long parameterId);
+    Integer isInUse(@Param("parameterId") Long parameterId);
 }

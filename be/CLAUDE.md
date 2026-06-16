@@ -193,6 +193,193 @@ Thêm ErrorCode mới trong `exception/ErrorCode.java`.
 
 ---
 
+## JPA & Performance Rules
+
+### FetchType — luôn dùng LAZY cho collections
+
+```java
+// ✅ — đã đúng trong Project.java
+@OneToMany(mappedBy = "project", fetch = FetchType.LAZY)
+private List<Task> tasks = new ArrayList<>();
+
+// ❌ — KHÔNG bao giờ dùng EAGER cho collection
+@OneToMany(fetch = FetchType.EAGER)
+```
+
+### Không dùng `findAll()` không có Pageable
+
+```java
+// ❌ — trả về toàn bộ table, OOM khi data lớn
+repository.findAll()
+
+// ✅
+repository.findAll(pageable)
+// hoặc JPQL với keyword + Pageable
+```
+
+### Tránh N+1 query — dùng JOIN FETCH khi cần load quan hệ
+
+```java
+// ❌ — mỗi project sẽ gây thêm query load tasks
+List<Project> projects = projectRepo.findAll();
+projects.forEach(p -> p.getTasks().size()); // N+1
+
+// ✅ — một query duy nhất
+@Query("SELECT p FROM Project p LEFT JOIN FETCH p.tasks WHERE p.id = :id")
+Optional<Project> findWithTasks(@Param("id") Long id);
+```
+
+### `@Column` phải khai báo rõ ràng cho String fields
+
+```java
+// ❌ — unlimited TEXT, không validate ở DB layer
+@Column(nullable = false)
+private String name;
+
+// ✅
+@Column(nullable = false, length = 255)
+private String name;
+
+@Column(columnDefinition = "TEXT")  // chỉ khi thực sự cần TEXT dài
+private String description;
+```
+
+### Timestamps — dùng `@PrePersist / @PreUpdate` (đã có pattern trong User.java)
+
+Luôn có `createdAt` (updatable = false) và `updatedAt` trên mọi entity.
+
+---
+
+## Logging Rules
+
+```java
+// ✅ — dùng @Slf4j (Lombok), không System.out.println
+@Slf4j
+@Service
+public class AuthServiceImpl {
+    public void login(...) {
+        log.info("Login attempt: email={}", email);   // ✅ log email OK
+        log.debug("User found: id={}", user.getId()); // ✅ log ID OK
+        log.error("Auth failed for email={}", email, ex);
+    }
+}
+```
+
+**KHÔNG bao giờ log:**
+- `password`, `token`, `secret`, header `Authorization`
+- Full request body khi có trường mật khẩu
+- Stack trace trực tiếp ra HTTP response (đã xử lý trong `GlobalExceptionHandler`)
+
+```java
+// ❌ — leak password vào log
+log.debug("Login request: {}", request); // request có trường password
+
+// ✅ — log fields an toàn
+log.debug("Login attempt: email={}", request.getEmail());
+```
+
+---
+
+## Security Rules
+
+### JWT
+
+- Chỉ put `email` (username) vào JWT subject — KHÔNG put password, role, permission trong payload
+- `app.jwt.secret` phải ≥ 32 ký tự (256-bit cho HMAC-SHA256) — validate khi khởi động
+- Expiration production: ≤ 24h (`app.jwt.expiration-ms=86400000`)
+- Khi token hết hạn → FE phải redirect về `/login`, clear token khỏi storage
+
+### Input Validation — bắt buộc trên mọi DTO
+
+```java
+// ✅ — @Valid trên mọi @RequestBody
+@PostMapping
+public ResponseEntity<?> create(@Valid @RequestBody MyRequest req) { ... }
+
+// DTO phải có đầy đủ constraints
+public class MyRequest {
+    @NotBlank                          // không cho phép null/empty/whitespace
+    @Size(max = 255)                   // chặn payload bombing
+    private String name;
+
+    @NotBlank
+    @Size(max = 2000)
+    private String description;
+}
+```
+
+### SQL Injection — chỉ dùng parameterized query
+
+```java
+// ✅ — JPQL parameterized (JPA enforce tự động)
+@Query("SELECT e FROM Entity e WHERE e.name = :name")
+List<Entity> findByName(@Param("name") String name);
+
+// ❌ — TUYỆT ĐỐI KHÔNG concat string vào native query
+@Query(value = "SELECT * FROM entities WHERE name = '" + name + "'", nativeQuery = true)
+
+// ✅ — native query phải dùng :param binding
+@Query(value = "SELECT * FROM entities WHERE name = :name", nativeQuery = true)
+List<Entity> findNative(@Param("name") String name);
+```
+
+### CORS
+
+- `allowedOrigins` phải đọc từ `application.yaml` — KHÔNG hardcode trong code
+- Production: chỉ whitelist domain thực tế (`https://app.tendoo.ai`), không dùng `*`
+- `allowCredentials(true)` chỉ khi cần cookie — JWT Bearer không cần, cân nhắc đặt thành `false`
+
+```yaml
+# application.yaml
+app:
+  cors:
+    allowed-origins: ${ALLOWED_ORIGINS:http://localhost:5173}
+```
+
+### IDOR — Validate ownership ở Service layer
+
+Khi user chỉ được thao tác resource của chính mình:
+
+```java
+// ✅ — check ownership trước khi trả về / update / delete
+public TaskResponse getById(Long id, Long currentUserId) {
+    Task task = findOrThrow(id);
+    if (!task.getProject().getUser().getId().equals(currentUserId)) {
+        throw new AppException(ErrorCode.UNAUTHORIZED);
+    }
+    return mapper.toResponse(task);
+}
+```
+
+### Response — không bao giờ lộ password hoặc sensitive field
+
+```java
+// ❌ — User entity có trường password
+return ApiResponse.success(user);
+
+// ✅ — DTO chỉ expose safe fields
+public class UserResponse {
+    private Long id;
+    private String email;
+    private String name;
+    private LocalDateTime createdAt;
+    // KHÔNG có: password, token, internalFlags
+}
+```
+
+### Sensitive files — phải trong .gitignore
+
+```
+application-local.yaml
+.env
+.env.*
+*.secret
+*.pem
+*.key
+```
+
+---
+
 ## Never Do
 
 - Commit `application-local.yaml` hoặc file có credentials
@@ -200,6 +387,12 @@ Thêm ErrorCode mới trong `exception/ErrorCode.java`.
 - Return raw Entity từ Controller
 - Return null từ Service — dùng `findOrThrow()` hoặc `Optional.orElseThrow()`
 - Sửa Flyway migration đã applied
+- Dùng `@Query` với string concatenation trong native SQL
+- Log `password`, `token`, `Authorization` header
+- Bỏ `@Valid` trên `@RequestBody`
+- Dùng `findAll()` không có `Pageable` trên bảng lớn
+- Return `User.password` trong bất kỳ DTO nào
+- Throw `RuntimeException` trực tiếp — luôn dùng `AppException(ErrorCode.X)`
 
 ---
 

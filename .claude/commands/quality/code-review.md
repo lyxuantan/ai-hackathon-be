@@ -1,9 +1,11 @@
 ---
 description: "Review code trên branch hiện tại — correctness, security, performance. Dùng: /quality/code-review [file hoặc để trống = toàn branch]"
-allowed-tools: Bash, Read, Grep
+allowed-tools: Agent, Bash, Read, Grep, Glob
 ---
 
 # /quality/code-review — Code Review
+
+> **Agent Task** — Spawn `general-purpose` subagent để review toàn bộ diff trong isolated context, tránh làm nặng conversation chính. Nội dung bên dưới là prompt truyền vào agent.
 
 **Target (optional):** $ARGUMENTS
 (để trống → review toàn bộ diff so với main/master, hoặc truyền path file cụ thể)

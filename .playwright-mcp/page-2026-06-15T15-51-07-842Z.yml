@@ -1,0 +1,112 @@
+- generic:
+  - generic:
+    - generic:
+      - banner:
+        - generic:
+          - generic: tendoo° AI
+        - generic:
+          - generic:
+            - img
+          - generic: Admin
+      - generic:
+        - complementary:
+          - navigation:
+            - link:
+              - /url: /prompt-builder
+              - img
+              - generic: Prompt Builder
+            - link:
+              - /url: /flow-builder
+              - img
+              - generic: Flow Builder
+            - link:
+              - /url: /commands
+              - img
+              - generic: Quản lý câu lệnh
+            - generic:
+              - button:
+                - img
+                - generic: Quản lý danh mục
+                - img
+              - generic:
+                - link:
+                  - /url: /categories
+                  - generic: Danh mục tham số
+                - link:
+                  - /url: /system-parameters
+                  - generic: Cấu hình hệ thống
+            - generic:
+              - button:
+                - img
+                - generic: Lịch sử hệ thống
+                - img
+              - generic:
+                - link:
+                  - /url: /logs/messages
+                  - generic: Quản lý log message
+                - link:
+                  - /url: /logs/system
+                  - generic: Quản lý log hệ thống
+        - main:
+          - generic:
+            - generic:
+              - generic: Quản lý danh mục
+              - generic: /
+              - generic: Danh mục tham số
+            - generic:
+              - heading [level=1]: Danh mục tham số
+              - paragraph: Quản lý các tham số cấu hình được sử dụng trong hệ thống.
+            - generic:
+              - generic:
+                - generic:
+                  - img
+                  - textbox:
+                    - /placeholder: Tìm theo tên tham số hoặc mô tả...
+                - combobox [expanded]:
+                  - generic: Tất cả kiểu dữ liệu
+                  - img
+              - button:
+                - img
+                - text: Thêm mới
+            - generic:
+              - generic:
+                - table:
+                  - rowgroup:
+                    - row:
+                      - columnheader: STT
+                      - columnheader: Tên tham số
+                      - columnheader: Kiểu dữ liệu
+                      - columnheader: Mô tả
+                      - columnheader: Thao tác
+                  - rowgroup:
+                    - row:
+                      - cell:
+                        - generic:
+                          - generic: Không thể tải dữ liệu. Vui lòng thử lại.
+              - generic:
+                - generic:
+                  - generic: "Tổng số: 0 bản ghi"
+                  - generic: "|"
+                  - generic:
+                    - generic: Hiển thị
+                    - combobox:
+                      - generic: "10"
+                      - img
+                    - generic: / trang
+                - generic:
+                  - button [disabled]:
+                    - img
+                  - button: "1"
+                  - button [disabled]:
+                    - img
+    - list
+  - listbox [ref=e153]:
+    - option "Tất cả kiểu dữ liệu" [active] [selected] [ref=e154]:
+      - img [ref=e157]
+      - generic [ref=e159]: Tất cả kiểu dữ liệu
+    - option "Boolean" [ref=e160]:
+      - generic [ref=e162]: Boolean
+    - option "Number" [ref=e163]:
+      - generic [ref=e165]: Number
+    - option "Text" [ref=e166]:
+      - generic [ref=e168]: Text

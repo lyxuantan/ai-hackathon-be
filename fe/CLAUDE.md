@@ -338,6 +338,214 @@ npx sonar-scanner \
 
 ---
 
+## Security Rules
+
+### Token Storage
+
+Token hiện lưu trong `localStorage` (`client.ts:14`). Đây là trade-off phổ biến — cần lưu ý:
+
+```ts
+// Hiện tại (localStorage — dễ dùng nhưng XSS-exposed)
+localStorage.getItem('accessToken')
+
+// Quy tắc bắt buộc:
+// 1. Logout → xóa ngay lập tức
+localStorage.removeItem('accessToken')
+sessionStorage.clear()
+
+// 2. Không bao giờ đọc/ghi token trong component — chỉ qua lib/api/client.ts
+// 3. Không log token ra console
+```
+
+### XSS Prevention — KHÔNG dùng `dangerouslySetInnerHTML`
+
+```tsx
+// ❌ — XSS ngay lập tức nếu content từ user input
+<div dangerouslySetInnerHTML={{ __html: userContent }} />
+
+// ✅ — render text thuần, React tự escape
+<div>{userContent}</div>
+
+// Nếu BẮT BUỘC render HTML (rich text editor): cài DOMPurify
+import DOMPurify from 'dompurify'
+<div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }} />
+```
+
+### Environment Variables — VITE_ là public
+
+```ts
+// ❌ — VITE_ prefix = bundle vào JS, user đọc được trong DevTools
+VITE_OPENAI_API_KEY=sk-xxx
+VITE_DB_PASSWORD=secret
+
+// ✅ — chỉ put public config vào VITE_
+VITE_API_BASE_URL=https://api.tendoo.ai
+
+// Secrets phải để ở BE, call qua API
+```
+
+### 401 Handling — redirect về login khi token hết hạn
+
+```ts
+// ✅ — trong client.ts, xử lý 401 globally
+if (!res.ok) {
+  if (res.status === 401) {
+    localStorage.removeItem('accessToken')
+    window.location.href = '/login'   // hoặc navigate('/login')
+    return
+  }
+  throw new ApiError(res.status, json.message ?? res.statusText)
+}
+```
+
+### URL Params — không put sensitive data
+
+```ts
+// ❌ — email/userId xuất hiện trong server log, browser history
+navigate({ to: '/profile', search: { email: user.email } })
+
+// ✅ — dùng path param cho ID, không put PII vào query string
+navigate({ to: '/profile/$id', params: { id: user.id } })
+```
+
+### File Upload (nếu implement)
+
+```ts
+// Validate trước khi gửi lên server
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'application/pdf']
+const MAX_SIZE_MB = 10
+
+function validateFile(file: File): string | null {
+  if (!ALLOWED_TYPES.includes(file.type)) return 'Định dạng không hỗ trợ'
+  if (file.size > MAX_SIZE_MB * 1024 * 1024) return `File phải < ${MAX_SIZE_MB}MB`
+  return null
+}
+```
+
+---
+
+## TanStack Query Rules
+
+### Query Keys — extract thành constant
+
+```ts
+// ✅ — tập trung query keys, dễ invalidate
+export const SYSTEM_PARAM_KEYS = {
+  all: ['system-parameters'] as const,
+  list: (params: ListParams) => ['system-parameters', 'list', params] as const,
+  detail: (id: number) => ['system-parameters', 'detail', id] as const,
+}
+
+// Dùng trong hook
+useQuery({ queryKey: SYSTEM_PARAM_KEYS.list(params), queryFn: ... })
+
+// Invalidate sau mutation — không refetch tay
+queryClient.invalidateQueries({ queryKey: SYSTEM_PARAM_KEYS.all })
+```
+
+### staleTime — tránh refetch không cần thiết
+
+```ts
+// ✅ — data ít thay đổi (system params, config) → staleTime dài
+useQuery({
+  queryKey: SYSTEM_PARAM_KEYS.list(params),
+  queryFn: () => listSystemParameters(params),
+  staleTime: 1000 * 60 * 5,  // 5 phút
+})
+```
+
+### Conditional query — dùng `enabled`
+
+```ts
+// ✅ — chỉ fetch khi có id
+useQuery({
+  queryKey: SYSTEM_PARAM_KEYS.detail(id),
+  queryFn: () => getSystemParameter(id),
+  enabled: !!id,   // không fetch khi id = null/undefined
+})
+```
+
+### Server state — KHÔNG duplicate vào useState
+
+```ts
+// ❌ — data bị stale ngay khi mutation xảy ra ở tab khác
+const [params, setParams] = useState<SystemParameter[]>([])
+useEffect(() => { fetchAll().then(setParams) }, [])
+
+// ✅ — TanStack Query là single source of truth
+const { data: params } = useQuery({ queryKey: ..., queryFn: ... })
+```
+
+---
+
+## Performance Rules
+
+### KHÔNG tạo object/array inline trong JSX props
+
+```tsx
+// ❌ — object mới mỗi render, phá vỡ React.memo
+<DataTable columns={['id', 'name', 'value']} style={{ gap: 8 }} />
+
+// ✅ — extract ra ngoài component hoặc useMemo
+const COLUMNS = ['id', 'name', 'value'] as const
+const tableStyle = { gap: 8 }
+<DataTable columns={COLUMNS} style={tableStyle} />
+```
+
+### `useCallback` cho handler truyền xuống child
+
+```tsx
+// ✅ — tránh re-render child không cần thiết
+const handleDelete = useCallback((id: number) => {
+  deleteMutation.mutate(id)
+}, [deleteMutation])
+
+<DeleteButton onDelete={handleDelete} />
+```
+
+### Không dùng `useEffect` cho data fetching
+
+```ts
+// ❌ — anti-pattern: manual fetch + state
+useEffect(() => {
+  fetch('/api/data').then(r => r.json()).then(setData)
+}, [])
+
+// ✅ — TanStack Query lo hết
+const { data } = useQuery({ queryKey: [...], queryFn: fetchData })
+```
+
+---
+
+## Accessibility (a11y)
+
+### Icon-only button — bắt buộc có `aria-label`
+
+```tsx
+// ❌ — screen reader đọc là "button"
+<Button variant="ghost" size="icon" onClick={handleDelete}>
+  <Trash2 className="h-4 w-4" />
+</Button>
+
+// ✅
+<Button variant="ghost" size="icon" aria-label="Xóa tham số" onClick={handleDelete}>
+  <Trash2 className="h-4 w-4" />
+</Button>
+```
+
+### Form input — phải liên kết với label
+
+```tsx
+// ✅
+<Label htmlFor="param-key">Tên tham số</Label>
+<Input id="param-key" {...register('key')} />
+
+// Nếu không có label hiển thị:
+<Input aria-label="Tìm kiếm tham số" {...register('search')} />
+```
+
+---
+
 ## Verify trước khi done
 
 ```bash

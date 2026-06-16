@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Pencil, Trash2, SearchX, DatabaseZap, Search, ChevronRight } from 'lucide-react'
+import { Plus, Pencil, Trash2, SearchX, DatabaseZap, Search, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -20,19 +20,31 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { SystemParameterFormModal } from '@/components/system-parameters/SystemParameterFormModal'
 import { DeleteConfirmDialog } from '@/components/system-parameters/DeleteConfirmDialog'
+import { ParamTypeBadge, inferParamType } from '@/components/system-parameters/ParamTypeBadge'
 import { useSystemParameterList } from '@/hooks/useSystemParameters'
 import { useDebounce } from '@/hooks/useDebounce'
+import { cn } from '@/lib/utils'
 import type { SystemParameter } from '@/types/system-parameter'
+import type { ParamType } from '@/components/system-parameters/ParamTypeBadge'
 
-const PAGE_SIZES = [10, 20, 50]
+const PAGE_SIZES = ['10', '20', '50'] as const
 const SKELETON_ROW_KEYS = ['sk-r1', 'sk-r2', 'sk-r3', 'sk-r4', 'sk-r5'] as const
-const SKELETON_COL_KEYS = ['sk-c1', 'sk-c2', 'sk-c3', 'sk-c4', 'sk-c5', 'sk-c6'] as const
+const SKELETON_COL_KEYS = ['sk-c1', 'sk-c2', 'sk-c3', 'sk-c4'] as const
+const DATA_TYPE_OPTIONS = [
+  { value: 'all', label: 'Tất cả kiểu dữ liệu' },
+  { value: 'Boolean', label: 'Boolean' },
+  { value: 'Number', label: 'Number' },
+  { value: 'Text', label: 'Text' },
+] as const
+
+type DataTypeFilter = 'all' | ParamType
 
 export function SystemParametersPage() {
   const [keyword, setKeyword] = useState('')
   const debouncedKeyword = useDebounce(keyword, 300)
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(10)
+  const [typeFilter, setTypeFilter] = useState<DataTypeFilter>('all')
 
   const [createOpen, setCreateOpen] = useState(false)
   const [editParam, setEditParam] = useState<SystemParameter | null>(null)
@@ -48,6 +60,9 @@ export function SystemParametersPage() {
   const totalElements = data?.totalElements ?? 0
   const totalPages = data?.totalPages ?? 1
 
+  const filteredRows =
+    typeFilter === 'all' ? rows : rows.filter((p) => inferParamType(p.value) === typeFilter)
+
   const handleKeywordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setKeyword(e.target.value)
     setPage(0)
@@ -55,6 +70,11 @@ export function SystemParametersPage() {
 
   const handlePageSizeChange = (val: string) => {
     setPageSize(Number(val))
+    setPage(0)
+  }
+
+  const handleTypeFilterChange = (val: string) => {
+    setTypeFilter(val as DataTypeFilter)
     setPage(0)
   }
 
@@ -70,7 +90,9 @@ export function SystemParametersPage() {
       return SKELETON_ROW_KEYS.map((rowKey) => (
         <TableRow key={rowKey}>
           {SKELETON_COL_KEYS.map((colKey) => (
-            <TableCell key={colKey}><Skeleton className="h-5 w-full" /></TableCell>
+            <TableCell key={colKey}>
+              <Skeleton className="h-5 w-full" />
+            </TableCell>
           ))}
         </TableRow>
       ))
@@ -78,7 +100,7 @@ export function SystemParametersPage() {
     if (isError) {
       return (
         <TableRow>
-          <TableCell colSpan={6}>
+          <TableCell colSpan={5}>
             <div className="flex flex-col items-center justify-center py-12 gap-2 text-destructive">
               <span className="text-sm">Không thể tải dữ liệu. Vui lòng thử lại.</span>
             </div>
@@ -86,12 +108,12 @@ export function SystemParametersPage() {
         </TableRow>
       )
     }
-    if (rows.length === 0) {
+    if (filteredRows.length === 0) {
       return (
         <TableRow>
-          <TableCell colSpan={6}>
+          <TableCell colSpan={5}>
             <div className="flex flex-col items-center justify-center py-14 gap-3 text-muted-foreground">
-              {keyword ? (
+              {keyword || typeFilter !== 'all' ? (
                 <>
                   <SearchX className="h-10 w-10 opacity-40" />
                   <span className="text-sm">Không có kết quả phù hợp</span>
@@ -110,41 +132,41 @@ export function SystemParametersPage() {
         </TableRow>
       )
     }
-    return rows.map((param, idx) => (
+    return filteredRows.map((param, idx) => (
       <TableRow key={param.id}>
-        <TableCell className="text-muted-foreground text-sm text-center">
+        <TableCell className="text-muted-foreground text-sm text-center w-[60px]">
           {page * pageSize + idx + 1}
         </TableCell>
-        <TableCell className="text-sm font-medium">
-          {param.name ?? <span className="text-muted-foreground/50">—</span>}
+        <TableCell className="font-mono text-sm text-foreground w-[220px]">{param.key}</TableCell>
+        <TableCell className="w-[160px]">
+          <ParamTypeBadge value={param.value} />
         </TableCell>
-        <TableCell className="font-mono text-sm">{param.key}</TableCell>
-        <TableCell className="text-sm">{param.value}</TableCell>
         <TableCell className="text-sm text-muted-foreground">
           {param.description ? (
             <span className="line-clamp-2" title={param.description}>
               {param.description}
             </span>
           ) : (
-            <span className="text-muted-foreground/40">—</span>
+            <span className="opacity-40">—</span>
           )}
         </TableCell>
-        <TableCell className="text-center">
+        <TableCell className="w-[100px]">
           <div className="flex items-center justify-center gap-1">
             <Button
               variant="ghost"
               size="icon"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
               onClick={() => setEditParam(param)}
-              title="Sửa"
+              title="Chỉnh sửa"
             >
               <Pencil className="h-4 w-4" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
+              className="h-8 w-8 text-destructive hover:text-destructive"
               onClick={() => setDeleteParam(param)}
               title="Xoá"
-              className="text-destructive hover:text-destructive"
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -154,99 +176,135 @@ export function SystemParametersPage() {
     ))
   }
 
+  const pageCount = Math.min(totalPages, 5)
+  const pageNumbers = Array.from({ length: pageCount }, (_, i) => i)
+
   return (
-    <div className="p-6 space-y-4">
+    <div className="bg-[#f9fafb] min-h-screen px-8 py-6 space-y-5">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-        <span>Quản lý danh mục</span>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="font-semibold text-foreground">Cấu hình hệ thống</span>
+      <div className="flex items-center text-sm">
+        <span className="text-muted-foreground">Quản lý danh mục</span>
+        <span className="text-muted-foreground/40 px-2">/</span>
+        <span className="font-semibold text-foreground">Danh mục tham số</span>
       </div>
 
-      {/* Card */}
-      <div className="rounded-lg border border-border bg-card shadow-sm">
-        {/* Toolbar */}
-        <div className="flex items-center justify-between gap-3 p-4 border-b border-border">
-          <div className="relative flex-1 max-w-[500px]">
+      {/* Page title */}
+      <div className="space-y-1">
+        <h1 className="text-2xl font-bold text-foreground">Danh mục tham số</h1>
+        <p className="text-sm text-muted-foreground">
+          Quản lý các tham số cấu hình được sử dụng trong hệ thống.
+        </p>
+      </div>
+
+      {/* Toolbar */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="relative w-[380px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
-              placeholder="Tìm kiếm tên, mã cấu hình..."
+              placeholder="Tìm theo tên tham số hoặc mô tả..."
               value={keyword}
               onChange={handleKeywordChange}
-              className="pl-9"
+              className="pl-9 h-10"
             />
           </div>
-          <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="h-4 w-4" />
-            Thêm mới
-          </Button>
+          <Select value={typeFilter} onValueChange={handleTypeFilterChange}>
+            <SelectTrigger className="w-[220px] h-10">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {DATA_TYPE_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
+        <Button
+          className="h-10 bg-[#e8192c] hover:bg-[#cc1627] text-white border-0 gap-1.5"
+          onClick={() => setCreateOpen(true)}
+        >
+          <Plus className="h-4 w-4" />
+          Thêm mới
+        </Button>
+      </div>
 
-        {/* Table */}
+      {/* Table card */}
+      <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead className="w-[56px]">STT</TableHead>
-              <TableHead>Tên cấu hình</TableHead>
-              <TableHead className="w-[180px]">Mã cấu hình</TableHead>
-              <TableHead className="w-[160px]">Giá trị</TableHead>
+            <TableRow className="bg-muted/50">
+              <TableHead className="w-[60px] text-center">STT</TableHead>
+              <TableHead className="w-[220px]">Tên tham số</TableHead>
+              <TableHead className="w-[160px]">Kiểu dữ liệu</TableHead>
               <TableHead>Mô tả</TableHead>
-              <TableHead className="w-[110px] text-center">Thao tác</TableHead>
+              <TableHead className="w-[100px] text-center">Thao tác</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
-            {renderTableBody()}
-          </TableBody>
+          <TableBody>{renderTableBody()}</TableBody>
         </Table>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between border-t border-border px-4 py-3 text-sm text-muted-foreground">
-          <span>
-            Tổng số: <strong className="text-foreground">{totalElements}</strong> bản ghi
-          </span>
+        <div className="flex items-center justify-between border-t border-border px-5 py-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 w-8 p-0"
-                onClick={() => setPage((p) => Math.max(0, p - 1))}
-                disabled={page === 0 || isLoading}
-              >
-                &lt;
-              </Button>
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i).map((pageNum) => (
-                <Button
-                  key={pageNum}
-                  variant={page === pageNum ? 'default' : 'outline'}
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  onClick={() => setPage(pageNum)}
-                  disabled={isLoading}
-                >
-                  {pageNum + 1}
-                </Button>
-              ))}
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 w-8 p-0"
-                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                disabled={page >= totalPages - 1 || isLoading}
-              >
-                &gt;
-              </Button>
+            <span>
+              Tổng số: <span className="font-medium text-foreground">{totalElements}</span> bản ghi
+            </span>
+            <span className="text-border">|</span>
+            <div className="flex items-center gap-2">
+              <span>Hiển thị</span>
+              <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
+                <SelectTrigger className="w-[80px] h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAGE_SIZES.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <span>/ trang</span>
             </div>
-            <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
-              <SelectTrigger className="w-[100px] h-8">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PAGE_SIZES.map((s) => (
-                  <SelectItem key={s} value={String(s)}>{s}/trang</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              aria-label="Trang trước"
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              disabled={page === 0 || isLoading}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            {pageNumbers.map((pageNum) => (
+              <Button
+                key={pageNum}
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  'h-8 w-8 p-0 text-sm font-semibold',
+                  page === pageNum && 'bg-[#e8192c] hover:bg-[#cc1627] text-white'
+                )}
+                onClick={() => setPage(pageNum)}
+                disabled={isLoading}
+              >
+                {pageNum + 1}
+              </Button>
+            ))}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              aria-label="Trang sau"
+              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              disabled={page >= totalPages - 1 || isLoading}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>

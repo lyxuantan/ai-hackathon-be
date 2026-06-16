@@ -1,4 +1,11 @@
+---
+description: "/sonar-fix-be — Fix SonarQube Issues cho Spring Boot BE"
+allowed-tools: Agent, Bash, Read, Write, Edit, Glob, Grep
+---
+
 # /sonar-fix-be — Fix SonarQube Issues cho Spring Boot BE
+
+> **Agent Task** — Spawn `general-purpose` subagent để fetch BE issues + fix trong isolated context. Nội dung bên dưới là prompt truyền vào agent.
 
 Fetch issues từ SonarQube chỉ trong BE source, phân tích và fix theo Java/Spring Boot conventions.
 

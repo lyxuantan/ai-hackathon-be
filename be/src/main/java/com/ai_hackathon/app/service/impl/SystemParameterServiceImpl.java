@@ -51,7 +51,7 @@ public class SystemParameterServiceImpl implements SystemParameterService {
     @Transactional
     public SystemParameterResponse update(Long id, SystemParameterRequest request) {
         SystemParameter parameter = findOrThrow(id);
-        if (repository.isInUse(id)) {
+        if (repository.isInUse(id) > 0) {
             throw new AppException(ErrorCode.SYSTEM_PARAMETER_IN_USE);
         }
         parameter.setName(request.getName());
@@ -65,7 +65,7 @@ public class SystemParameterServiceImpl implements SystemParameterService {
     @Transactional
     public void delete(Long id) {
         findOrThrow(id);
-        if (repository.isInUse(id)) {
+        if (repository.isInUse(id) > 0) {
             throw new AppException(ErrorCode.SYSTEM_PARAMETER_IN_USE);
         }
         repository.deleteById(id);
@@ -74,7 +74,7 @@ public class SystemParameterServiceImpl implements SystemParameterService {
     @Override
     public SystemParameterInUseResponse isInUse(Long id) {
         findOrThrow(id);
-        return new SystemParameterInUseResponse(repository.isInUse(id));
+        return new SystemParameterInUseResponse(repository.isInUse(id) > 0);
     }
 
     private SystemParameter findOrThrow(Long id) {

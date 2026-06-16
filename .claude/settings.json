@@ -1,5 +1,4 @@
 {
-  "enabledMcpjsonServers": ["jira", "figma"],
   "permissions": {
     "allow": [
       "Read(**)",
@@ -49,5 +48,13 @@
       "Bash(git push origin master *)",
       "Bash(git push origin main *)"
     ]
+  },
+  "enabledMcpjsonServers": [
+    "jira",
+    "figma"
+  ],
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true,
+    "playwright@claude-plugins-official": true
   }
 }

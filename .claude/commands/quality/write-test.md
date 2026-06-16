@@ -1,9 +1,11 @@
 ---
 description: "Tạo test cases cho file/component/class. Dùng: /quality/write-test <đường dẫn file>"
-allowed-tools: Bash, Read, Write, Grep
+allowed-tools: Agent, Bash, Read, Write, Edit, Grep, Glob
 ---
 
 # /quality/write-test — Tạo Tests
+
+> **Agent Task** — Spawn `general-purpose` subagent để đọc source + viết tests trong isolated context. Nội dung bên dưới là prompt truyền vào agent.
 
 **Target file:** $ARGUMENTS
 

@@ -1,4 +1,11 @@
+---
+description: "/sonar-fix — Fetch SonarQube Issues và Auto-Fix (BE + FE)"
+allowed-tools: Agent, Bash, Read, Write, Edit, Glob, Grep
+---
+
 # /sonar-fix — Fetch SonarQube Issues và Auto-Fix
+
+> **Agent Task** — Spawn `general-purpose` subagent để fetch + fix trong isolated context. Nội dung bên dưới là prompt truyền vào agent.
 
 Kết nối SonarQube, lấy danh sách issues, phân tích và fix từng issue trong codebase.
 

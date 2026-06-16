@@ -68,21 +68,21 @@ describe('SystemParametersPage', () => {
       isLoading: false, isError: false,
     } as any)
     render(<SystemParametersPage />, { wrapper })
-    const input = screen.getByPlaceholderText(/Tìm kiếm/)
+    const input = screen.getByPlaceholderText(/Tìm/)
     fireEvent.change(input, { target: { value: 'nothing' } })
     expect(screen.getByText(/Không có kết quả phù hợp/)).toBeInTheDocument()
   })
 
-  it('renders data rows', () => {
+  it('renders data rows with key in table', () => {
     vi.mocked(hooks.useSystemParameterList).mockReturnValue({ data: PAGE_DATA, isLoading: false, isError: false } as any)
     render(<SystemParametersPage />, { wrapper })
     expect(screen.getByText('KEY_ONE')).toBeInTheDocument()
     expect(screen.getByText('KEY_TWO')).toBeInTheDocument()
-    expect(screen.getByText('Config One')).toBeInTheDocument()
+    expect(screen.getByText('First')).toBeInTheDocument()
   })
 
-  it('shows "—" for null name', () => {
-    const data = { ...PAGE_DATA, content: [{ ...PAGE_DATA.content[0], name: null }] }
+  it('shows "—" for null description', () => {
+    const data = { ...PAGE_DATA, content: [{ ...PAGE_DATA.content[0], description: null }] }
     vi.mocked(hooks.useSystemParameterList).mockReturnValue({ data, isLoading: false, isError: false } as any)
     render(<SystemParametersPage />, { wrapper })
     expect(screen.getByText('—')).toBeInTheDocument()
@@ -104,7 +104,7 @@ describe('SystemParametersPage', () => {
   it('opens edit modal on pencil button click', () => {
     vi.mocked(hooks.useSystemParameterList).mockReturnValue({ data: PAGE_DATA, isLoading: false, isError: false } as any)
     render(<SystemParametersPage />, { wrapper })
-    fireEvent.click(screen.getAllByTitle('Sửa')[0])
+    fireEvent.click(screen.getAllByTitle('Chỉnh sửa')[0])
     expect(screen.getByText('Chỉnh sửa cấu hình hệ thống')).toBeInTheDocument()
   })
 
@@ -119,7 +119,7 @@ describe('SystemParametersPage', () => {
     vi.mocked(hooks.useSystemParameterList).mockReturnValue({ data: PAGE_DATA, isLoading: false, isError: false } as any)
     render(<SystemParametersPage />, { wrapper })
     expect(screen.getByText('Quản lý danh mục')).toBeInTheDocument()
-    expect(screen.getByText('Cấu hình hệ thống')).toBeInTheDocument()
+    expect(screen.getAllByText('Danh mục tham số').length).toBeGreaterThan(0)
   })
 
   it('renders pagination controls', () => {
@@ -127,17 +127,16 @@ describe('SystemParametersPage', () => {
       data: { ...PAGE_DATA, totalPages: 3 }, isLoading: false, isError: false,
     } as any)
     render(<SystemParametersPage />, { wrapper })
-    expect(screen.getByText('<')).toBeInTheDocument()
-    expect(screen.getByText('>')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Trang trước' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Trang sau' })).toBeInTheDocument()
   })
 
-  it('navigates to next page when > clicked', () => {
+  it('navigates to next page when trang sau clicked', () => {
     vi.mocked(hooks.useSystemParameterList).mockReturnValue({
       data: { ...PAGE_DATA, totalPages: 3 }, isLoading: false, isError: false,
     } as any)
     render(<SystemParametersPage />, { wrapper })
-    fireEvent.click(screen.getByText('>'))
-    // hook called again with page=1 (state updated)
+    fireEvent.click(screen.getByRole('button', { name: 'Trang sau' }))
     expect(hooks.useSystemParameterList).toHaveBeenCalled()
   })
 
@@ -146,8 +145,8 @@ describe('SystemParametersPage', () => {
       data: { ...PAGE_DATA, totalPages: 3 }, isLoading: false, isError: false,
     } as any)
     render(<SystemParametersPage />, { wrapper })
-    fireEvent.click(screen.getByText('>'))
-    fireEvent.click(screen.getByText('<'))
+    fireEvent.click(screen.getByRole('button', { name: 'Trang sau' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Trang trước' }))
     expect(hooks.useSystemParameterList).toHaveBeenCalled()
   })
 
@@ -156,7 +155,6 @@ describe('SystemParametersPage', () => {
       data: { ...PAGE_DATA, totalPages: 3 }, isLoading: false, isError: false,
     } as any)
     render(<SystemParametersPage />, { wrapper })
-    // Page buttons: "1", "2", "3" — the total count "2" may also match, use role=button
     const pageButtons = screen.getAllByRole('button', { name: '2' })
     fireEvent.click(pageButtons[0])
     expect(hooks.useSystemParameterList).toHaveBeenCalled()
@@ -182,7 +180,7 @@ describe('SystemParametersPage', () => {
   it('closes edit modal via onClose callback', () => {
     vi.mocked(hooks.useSystemParameterList).mockReturnValue({ data: PAGE_DATA, isLoading: false, isError: false } as any)
     render(<SystemParametersPage />, { wrapper })
-    fireEvent.click(screen.getAllByTitle('Sửa')[0])
+    fireEvent.click(screen.getAllByTitle('Chỉnh sửa')[0])
     expect(screen.getByText('Chỉnh sửa cấu hình hệ thống')).toBeInTheDocument()
     fireEvent.click(screen.getByText('Hủy bỏ'))
     expect(screen.queryByText('Chỉnh sửa cấu hình hệ thống')).not.toBeInTheDocument()
@@ -214,9 +212,7 @@ describe('SystemParametersPage', () => {
       isLoading: false, isError: false,
     } as any)
     render(<SystemParametersPage />, { wrapper })
-    // Click the "Thêm mới" button inside the empty state
     const buttons = screen.getAllByText('Thêm mới')
-    // There are two "Thêm mới" — one in toolbar, one in empty state
     fireEvent.click(buttons[buttons.length - 1])
     expect(screen.getByText('Thêm mới cấu hình hệ thống')).toBeInTheDocument()
   })
@@ -240,7 +236,7 @@ describe('SystemParametersPage', () => {
     const mockMutateAsync = vi.fn().mockResolvedValue({ ...PAGE_DATA.content[0], value: 'updated' })
     vi.mocked(hooks.useUpdateSystemParameter).mockReturnValue({ ...MUTATION_STUB, mutateAsync: mockMutateAsync } as any)
     render(<SystemParametersPage />, { wrapper })
-    fireEvent.click(screen.getAllByTitle('Sửa')[0])
+    fireEvent.click(screen.getAllByTitle('Chỉnh sửa')[0])
     fireEvent.click(screen.getByText('Lưu'))
     await waitFor(() => expect(mockMutateAsync).toHaveBeenCalled())
     expect(screen.queryByText('Chỉnh sửa cấu hình hệ thống')).not.toBeInTheDocument()

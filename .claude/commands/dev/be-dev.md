@@ -1,4 +1,11 @@
+---
+description: "/be-dev — Implement BE Feature cho Tendoo AI (Spring Boot)"
+allowed-tools: Agent, Bash, Read, Write, Edit, Glob, Grep, TodoWrite
+---
+
 # /be-dev — Implement BE Feature
+
+> **Agent Task** — Spawn `general-purpose` subagent để implement trong isolated context, giữ conversation chính sạch. Nội dung bên dưới là prompt truyền vào agent.
 
 Implement một BE feature cho Tendoo AI project theo chuẩn enterprise.
 
