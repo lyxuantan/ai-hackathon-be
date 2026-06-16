@@ -282,7 +282,7 @@ export function SystemParametersPage() {
             </Button>
             {pageNumbers.map((pageNum) => (
               <Button
-                key={pageNum}
+                key={`page-${pageNum}`}
                 variant="ghost"
                 size="sm"
                 className={cn(

@@ -133,7 +133,7 @@ class SystemParameterServiceTest {
         SystemParameterRequest request = mockRequest("NEW_KEY", "new_val", "new desc");
 
         when(repository.findById(1L)).thenReturn(Optional.of(existing));
-        when(repository.isInUse(1L)).thenReturn(false);
+        when(repository.isInUse(1L)).thenReturn(0);
         when(repository.save(any(SystemParameter.class))).thenAnswer(inv -> inv.getArgument(0));
 
         SystemParameterResponse response = service.update(1L, request);
@@ -155,7 +155,7 @@ class SystemParameterServiceTest {
     @Test
     void update_inUse_throwsInUse() {
         when(repository.findById(1L)).thenReturn(Optional.of(buildParam(1L, "KEY", "val", null)));
-        when(repository.isInUse(1L)).thenReturn(true);
+        when(repository.isInUse(1L)).thenReturn(1);
 
         assertThatThrownBy(() -> service.update(1L, mockRequest("KEY", "new_val", null)))
                 .isInstanceOf(AppException.class)
@@ -170,7 +170,7 @@ class SystemParameterServiceTest {
     @Test
     void delete_notInUse_deletesSuccessfully() {
         when(repository.findById(1L)).thenReturn(Optional.of(buildParam(1L, "KEY", "val", null)));
-        when(repository.isInUse(1L)).thenReturn(false);
+        when(repository.isInUse(1L)).thenReturn(0);
 
         service.delete(1L);
 
@@ -192,7 +192,7 @@ class SystemParameterServiceTest {
     @Test
     void delete_inUse_throwsInUse() {
         when(repository.findById(1L)).thenReturn(Optional.of(buildParam(1L, "KEY", "val", null)));
-        when(repository.isInUse(1L)).thenReturn(true);
+        when(repository.isInUse(1L)).thenReturn(1);
 
         assertThatThrownBy(() -> service.delete(1L))
                 .isInstanceOf(AppException.class)
@@ -207,7 +207,7 @@ class SystemParameterServiceTest {
     @Test
     void isInUse_parameterExists_returnsFalse() {
         when(repository.findById(1L)).thenReturn(Optional.of(buildParam(1L, "KEY", "val", null)));
-        when(repository.isInUse(1L)).thenReturn(false);
+        when(repository.isInUse(1L)).thenReturn(0);
 
         SystemParameterInUseResponse response = service.isInUse(1L);
 
@@ -217,7 +217,7 @@ class SystemParameterServiceTest {
     @Test
     void isInUse_parameterInUse_returnsTrue() {
         when(repository.findById(1L)).thenReturn(Optional.of(buildParam(1L, "KEY", "val", null)));
-        when(repository.isInUse(1L)).thenReturn(true);
+        when(repository.isInUse(1L)).thenReturn(1);
 
         SystemParameterInUseResponse response = service.isInUse(1L);
 

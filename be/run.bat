@@ -2,7 +2,7 @@
 REM Run Spring Boot BE (dev mode)
 REM Edit env vars below or set them before calling this script
 
-if "%DB_URL%"==""      set DB_URL=jdbc:mariadb://localhost:3306/ai_hackathon
+if "%DB_URL%"==""      set DB_URL=jdbc:mariadb://[::1]:3306/ai_hackathon
 if "%DB_USERNAME%"=="" set DB_USERNAME=root
 if "%DB_PASSWORD%"=="" set DB_PASSWORD=
 if "%JWT_SECRET%"==""  set JWT_SECRET=change-me-in-production-must-be-at-least-32-characters-long
