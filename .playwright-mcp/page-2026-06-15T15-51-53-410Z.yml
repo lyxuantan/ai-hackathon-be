@@ -1,0 +1,127 @@
+- generic:
+  - generic:
+    - generic:
+      - banner:
+        - generic:
+          - generic: tendoo° AI
+        - generic:
+          - generic:
+            - img
+          - generic: Admin
+      - generic:
+        - complementary:
+          - navigation:
+            - link:
+              - /url: /prompt-builder
+              - img
+              - generic: Prompt Builder
+            - link:
+              - /url: /flow-builder
+              - img
+              - generic: Flow Builder
+            - link:
+              - /url: /commands
+              - img
+              - generic: Quản lý câu lệnh
+            - generic:
+              - button:
+                - img
+                - generic: Quản lý danh mục
+                - img
+              - generic:
+                - link:
+                  - /url: /categories
+                  - generic: Danh mục tham số
+                - link:
+                  - /url: /system-parameters
+                  - generic: Cấu hình hệ thống
+            - generic:
+              - button:
+                - img
+                - generic: Lịch sử hệ thống
+                - img
+              - generic:
+                - link:
+                  - /url: /logs/messages
+                  - generic: Quản lý log message
+                - link:
+                  - /url: /logs/system
+                  - generic: Quản lý log hệ thống
+        - main:
+          - generic:
+            - generic:
+              - generic: Quản lý danh mục
+              - generic: /
+              - generic: Danh mục tham số
+            - generic:
+              - heading [level=1]: Danh mục tham số
+              - paragraph: Quản lý các tham số cấu hình được sử dụng trong hệ thống.
+            - generic:
+              - generic:
+                - generic:
+                  - img
+                  - textbox:
+                    - /placeholder: Tìm theo tên tham số hoặc mô tả...
+                - combobox:
+                  - generic: Tất cả kiểu dữ liệu
+                  - img
+              - button:
+                - img
+                - text: Thêm mới
+            - generic:
+              - generic:
+                - table:
+                  - rowgroup:
+                    - row:
+                      - columnheader: STT
+                      - columnheader: Tên tham số
+                      - columnheader: Kiểu dữ liệu
+                      - columnheader: Mô tả
+                      - columnheader: Thao tác
+                  - rowgroup:
+                    - row:
+                      - cell:
+                        - generic:
+                          - generic: Không thể tải dữ liệu. Vui lòng thử lại.
+              - generic:
+                - generic:
+                  - generic: "Tổng số: 0 bản ghi"
+                  - generic: "|"
+                  - generic:
+                    - generic: Hiển thị
+                    - combobox:
+                      - generic: "10"
+                      - img
+                    - generic: / trang
+                - generic:
+                  - button [disabled]:
+                    - img
+                  - button: "1"
+                  - button [disabled]:
+                    - img
+    - list
+  - dialog "Thêm mới cấu hình hệ thống" [ref=e170]:
+    - heading "Thêm mới cấu hình hệ thống" [level=2] [ref=e172]
+    - generic [ref=e173]:
+      - generic [ref=e174]:
+        - generic [ref=e175]: Tên cấu hình *
+        - textbox "Tên cấu hình *" [active] [ref=e176]:
+          - /placeholder: Nhập tên cấu hình...
+      - generic [ref=e177]:
+        - generic [ref=e178]: Mã cấu hình *
+        - textbox "Mã cấu hình *" [ref=e179]:
+          - /placeholder: "VD: MAX_RETRY_COUNT"
+      - generic [ref=e180]:
+        - generic [ref=e181]: Giá trị *
+        - textbox "Giá trị *" [ref=e182]:
+          - /placeholder: Nhập giá trị...
+      - generic [ref=e183]:
+        - text: Mô tả
+        - textbox "Mô tả" [ref=e184]:
+          - /placeholder: Mô tả cấu hình (không bắt buộc)...
+      - generic [ref=e185]:
+        - button "Hủy bỏ" [ref=e186] [cursor=pointer]
+        - button "Lưu" [ref=e187] [cursor=pointer]
+    - button "Close" [ref=e188] [cursor=pointer]:
+      - img [ref=e189]
+      - generic [ref=e192]: Close
